@@ -4,42 +4,155 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mental Math</title>
+
+  <!-- iPhone app-like behavior -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mental Math">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #0b0d12; color: #e9eefc; }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 20px; }
-    .card { background: #121726; border: 1px solid #232b3f; border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-    h1 { margin: 0 0 8px; font-size: 28px; }
-    .muted { color: #a8b3d6; }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .grid { display: grid; gap: 10px; }
-    .checks { margin-top: 10px; }
-    label.chk { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #232b3f; border-radius: 14px; background: #0f1422; cursor: pointer; }
-    input[type="checkbox"] { width: 18px; height: 18px; }
-    button { border: 0; border-radius: 14px; padding: 12px 14px; font-weight: 700; cursor: pointer; }
-    .primary { background: #4f7cff; color: white; }
-    .secondary { background: #232b3f; color: #e9eefc; }
-    .danger { background: #ff4f4f; color: white; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    .screen { display: none; }
-    .screen.active { display: block; }
-    .problem { font-size: 44px; font-weight: 800; text-align: center; margin: 18px 0 10px; }
-    .input { width: 100%; font-size: 20px; padding: 12px 14px; border-radius: 14px; border: 1px solid #232b3f; background: #0f1422; color: #e9eefc; outline: none; }
-    .feedback { height: 26px; text-align: center; font-weight: 700; margin-top: 10px; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0;
+      background: #0b0d12;
+      color: #e9eefc;
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #121726;
+      border: 1px solid #232b3f;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .muted {
+      color: #a8b3d6;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    label.chk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #232b3f;
+      border-radius: 14px;
+      background: #0f1422;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #4f7cff;
+      color: white;
+    }
+
+    .secondary {
+      background: #232b3f;
+      color: #e9eefc;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .problem {
+      font-size: 44px;
+      font-weight: 800;
+      text-align: center;
+      margin: 18px 0 10px;
+    }
+
+    .input {
+      width: 100%;
+      font-size: 20px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+      outline: none;
+    }
+
+    .feedback {
+      height: 26px;
+      text-align: center;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
     .ok { color: #43d17a; }
     .bad { color: #ff6b6b; }
-    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px; }
-    .pill { font-size: 12px; padding: 6px 10px; border: 1px solid #232b3f; border-radius: 999px; background:#0f1422; color:#a8b3d6; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .pill {
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid #232b3f;
+      border-radius: 999px;
+      background: #0f1422;
+      color: #a8b3d6;
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <!-- MENU -->
+
+    <!-- MENU SCREEN -->
     <div id="menu" class="screen active">
       <div class="card">
         <h1>Mental Math</h1>
         <div class="muted">Choose problem types, then press Start.</div>
 
-        <div class="checks grid" style="margin-top:14px;">
+        <div class="grid" style="margin-top:14px;">
           <label class="chk"><input type="checkbox" id="add" checked> Add</label>
           <label class="chk"><input type="checkbox" id="sub"> Subtract</label>
           <label class="chk"><input type="checkbox" id="mul"> Multiply</label>
@@ -50,25 +163,27 @@
         <div class="row" style="margin-top:14px;">
           <button id="startBtn" class="primary" style="flex:1;">Start</button>
         </div>
-
-        <div class="muted" style="margin-top:10px; font-size: 13px;">
-          Tip: Add this to your Home Screen on iPhone for an app-like experience.
-        </div>
       </div>
     </div>
 
-    <!-- PRACTICE -->
+    <!-- PRACTICE SCREEN -->
     <div id="practice" class="screen">
       <div class="card">
         <div class="topbar">
           <button id="exitBtn" class="secondary">Exit</button>
-          <div class="pill">No end, keep going</div>
+          <div id="streakPill" class="pill">Streak: 0 | Best: 0</div>
           <div style="width:64px;"></div>
         </div>
 
         <div id="problem" class="problem">Loading…</div>
 
-        <input id="answer" class="input" inputmode="decimal" placeholder="Type answer" autocomplete="off" />
+        <input
+          id="answer"
+          class="input"
+          inputmode="decimal"
+          placeholder="Type answer"
+          autocomplete="off"
+        />
 
         <div class="row" style="margin-top:12px;">
           <button id="submitBtn" class="primary" style="flex:1;">Submit</button>
@@ -77,20 +192,25 @@
         <div id="feedback" class="feedback"></div>
       </div>
     </div>
+
   </div>
 
   <script>
-    // ----- State -----
+    // -------- STATE --------
     let selectedTypes = ["add"];
     let currentAnswer = 0;
+    let streak = 0;
+    let bestStreak = Number(localStorage.getItem("bestStreak") || 0);
 
-    // ----- Helpers -----
-    function randInt(min, max) { // inclusive
+    // -------- HELPERS --------
+    function randInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
+
     function pick(arr) {
       return arr[Math.floor(Math.random() * arr.length)];
     }
+
     function nearlyEqual(a, b, eps = 1e-6) {
       return Math.abs(a - b) < eps;
     }
@@ -102,33 +222,38 @@
         const a = randInt(1, 99), b = randInt(1, 99);
         return { prompt: `${a} + ${b}`, answer: a + b };
       }
+
       if (t === "sub") {
         const a = randInt(1, 99), b = randInt(1, 99);
         return { prompt: `${a} − ${b}`, answer: a - b };
       }
+
       if (t === "mul") {
         const a = randInt(2, 20), b = randInt(2, 20);
         return { prompt: `${a} × ${b}`, answer: a * b };
       }
+
       if (t === "div") {
         const b = randInt(2, 20);
         const ans = randInt(2, 20);
-        const a = b * ans;
-        return { prompt: `${a} ÷ ${b}`, answer: ans };
+        return { prompt: `${b * ans} ÷ ${b}`, answer: ans };
       }
+
       if (t === "pct") {
         const options = [5, 10, 12.5, 15, 20, 25, 30, 40, 50, 75];
         const p = pick(options);
         const base = randInt(20, 200);
-        const result = (p / 100) * base;
-        const pText = Number.isInteger(p) ? String(p) : String(p);
-        return { prompt: `${pText}% of ${base}`, answer: result };
+        return { prompt: `${p}% of ${base}`, answer: (p / 100) * base };
       }
     }
 
     function setScreen(name) {
       document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
       document.getElementById(name).classList.add("active");
+    }
+
+    function updateStreakUI() {
+      streakPill.textContent = `Streak: ${streak} | Best: ${bestStreak}`;
     }
 
     function nextProblem() {
@@ -139,36 +264,18 @@
       feedbackEl.className = "feedback";
       answerEl.value = "";
       answerEl.focus();
+      updateStreakUI();
     }
 
-    function readSelectedTypesFromMenu() {
+    function readSelectedTypes() {
       const types = [];
-      if (document.getElementById("add").checked) types.push("add");
-      if (document.getElementById("sub").checked) types.push("sub");
-      if (document.getElementById("mul").checked) types.push("mul");
-      if (document.getElementById("div").checked) types.push("div");
-      if (document.getElementById("pct").checked) types.push("pct");
+      if (add.checked) types.push("add");
+      if (sub.checked) types.push("sub");
+      if (mul.checked) types.push("mul");
+      if (div.checked) types.push("div");
+      if (pct.checked) types.push("pct");
       return types.length ? types : ["add"];
     }
-
-    // ----- Elements -----
-    const startBtn = document.getElementById("startBtn");
-    const exitBtn = document.getElementById("exitBtn");
-    const submitBtn = document.getElementById("submitBtn");
-    const problemEl = document.getElementById("problem");
-    const answerEl = document.getElementById("answer");
-    const feedbackEl = document.getElementById("feedback");
-
-    // ----- Events -----
-    startBtn.addEventListener("click", () => {
-      selectedTypes = readSelectedTypesFromMenu();
-      setScreen("practice");
-      nextProblem();
-    });
-
-    exitBtn.addEventListener("click", () => {
-      setScreen("menu");
-    });
 
     function submit() {
       const raw = answerEl.value.trim();
@@ -178,20 +285,54 @@
       const ok = Number.isFinite(val) && nearlyEqual(val, currentAnswer, 1e-4);
 
       if (ok) {
+        streak++;
+        if (streak > bestStreak) {
+          bestStreak = streak;
+          localStorage.setItem("bestStreak", bestStreak);
+        }
         feedbackEl.textContent = "Correct!";
         feedbackEl.className = "feedback ok";
-        // Small delay feels nicer
+        updateStreakUI();
         setTimeout(nextProblem, 200);
       } else {
+        streak = 0;
         feedbackEl.textContent = "Incorrect";
         feedbackEl.className = "feedback bad";
+        updateStreakUI();
         answerEl.value = "";
         answerEl.focus();
       }
     }
 
-    submitBtn.addEventListener("click", submit);
-    answerEl.addEventListener("keydown", (e) => {
+    // -------- ELEMENTS --------
+    const startBtn = document.getElementById("startBtn");
+    const exitBtn = document.getElementById("exitBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const problemEl = document.getElementById("problem");
+    const answerEl = document.getElementById("answer");
+    const feedbackEl = document.getElementById("feedback");
+    const streakPill = document.getElementById("streakPill");
+
+    const add = document.getElementById("add");
+    const sub = document.getElementById("sub");
+    const mul = document.getElementById("mul");
+    const div = document.getElementById("div");
+    const pct = document.getElementById("pct");
+
+    // -------- EVENTS --------
+    startBtn.onclick = () => {
+      selectedTypes = readSelectedTypes();
+      streak = 0;
+      setScreen("practice");
+      nextProblem();
+    };
+
+    exitBtn.onclick = () => {
+      setScreen("menu");
+    };
+
+    submitBtn.onclick = submit;
+    answerEl.addEventListener("keydown", e => {
       if (e.key === "Enter") submit();
     });
   </script>
