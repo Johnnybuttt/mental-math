@@ -2,42 +2,162 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- App-like iPhone behavior -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mental Math" />
+
+  <!-- Icon (you will add icon.png later) -->
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="icon" type="image/png" href="icon.png" />
+
   <title>Mental Math</title>
 
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Mental Math">
-
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #0b0d12; color: #e9eefc; }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 20px; }
-    .card { background: #121726; border: 1px solid #232b3f; border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0b0d12;
+      color: #e9eefc;
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #121726;
+      border: 1px solid #232b3f;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
     h1 { margin: 0 0 8px; font-size: 28px; }
     .muted { color: #a8b3d6; }
     .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .grid { display: grid; gap: 10px; }
-    label.chk { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #232b3f; border-radius: 14px; background: #0f1422; cursor: pointer; }
+
+    label.chk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #232b3f;
+      border-radius: 14px;
+      background: #0f1422;
+      cursor: pointer;
+    }
+
     input[type="checkbox"] { width: 18px; height: 18px; }
-    button { border: 0; border-radius: 14px; padding: 12px 14px; font-weight: 700; cursor: pointer; }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
     .primary { background: #4f7cff; color: white; }
     .secondary { background: #232b3f; color: #e9eefc; }
+
+    select {
+      width: 100%;
+      font-size: 16px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+    }
+
     .screen { display: none; }
     .screen.active { display: block; }
-    .problem { font-size: 44px; font-weight: 800; text-align: center; margin: 18px 0 10px; }
-    .input { width: 100%; font-size: 20px; padding: 12px 14px; border-radius: 14px; border: 1px solid #232b3f; background: #0f1422; color: #e9eefc; outline: none; }
-    .feedback { height: 26px; text-align: center; font-weight: 700; margin-top: 10px; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .pill {
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid #232b3f;
+      border-radius: 999px;
+      background: #0f1422;
+      color: #a8b3d6;
+      white-space: nowrap;
+    }
+
+    .problem {
+      font-size: 44px;
+      font-weight: 800;
+      text-align: center;
+      margin: 18px 0 10px;
+    }
+
+    .input {
+      width: 100%;
+      font-size: 20px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+      outline: none;
+    }
+
+    .feedback {
+      height: 26px;
+      text-align: center;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
     .ok { color: #43d17a; }
     .bad { color: #ff6b6b; }
-    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px; }
-    .pill { font-size: 12px; padding: 6px 10px; border: 1px solid #232b3f; border-radius: 999px; background:#0f1422; color:#a8b3d6; white-space: nowrap; }
-    .split { display:flex; gap: 10px; }
-    .grow { flex: 1; }
-    select { width: 100%; font-size: 16px; padding: 10px 12px; border-radius: 14px; border: 1px solid #232b3f; background: #0f1422; color: #e9eefc; }
-    .modalBackdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; padding: 20px; }
-    .modalBackdrop.active { display:flex; }
-    .modal { max-width: 520px; width: 100%; }
-    .big { font-size: 34px; font-weight: 900; text-align:center; margin: 6px 0; }
+
+    /* Modal */
+    .modalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modalBackdrop.active { display: flex; }
+
+    .modal {
+      max-width: 520px;
+      width: 100%;
+    }
+
+    .big {
+      font-size: 34px;
+      font-weight: 900;
+      text-align: center;
+      margin: 6px 0;
+    }
   </style>
 </head>
 
@@ -64,21 +184,23 @@
             Timer mode
           </label>
 
-          <div id="timerSettings" class="split" style="display:none;">
-            <div class="grow">
-              <div class="muted" style="font-size:12px; margin: 6px 0 6px;">Time</div>
-              <select id="timeLimit">
-                <option value="30">30 seconds</option>
-                <option value="60" selected>60 seconds</option>
-                <option value="90">90 seconds</option>
-                <option value="120">120 seconds</option>
-              </select>
-            </div>
+          <div id="timerSettings" style="display:none;">
+            <div class="muted" style="font-size:12px; margin: 6px 0 6px;">Time limit</div>
+            <select id="timeLimit">
+              <option value="30">30 seconds</option>
+              <option value="60" selected>60 seconds</option>
+              <option value="90">90 seconds</option>
+              <option value="120">120 seconds</option>
+            </select>
           </div>
         </div>
 
         <div class="row" style="margin-top:14px;">
           <button id="startBtn" class="primary" style="flex:1;">Start</button>
+        </div>
+
+        <div class="muted" style="margin-top:10px; font-size: 13px;">
+          iPhone tip: open this in Safari → Share → Add to Home Screen.
         </div>
       </div>
     </div>
@@ -106,7 +228,7 @@
 
   </div>
 
-  <!-- RESULTS MODAL (timer mode) -->
+  <!-- RESULTS MODAL (Timer Mode) -->
   <div id="modalBackdrop" class="modalBackdrop">
     <div class="modal card">
       <div class="muted" style="text-align:center;">Time’s up</div>
@@ -122,20 +244,21 @@
   </div>
 
   <script>
-    // -------- STATE --------
+    // ---------- STATE ----------
     let selectedTypes = ["add"];
     let currentAnswer = 0;
 
+    // Streak mode
     let streak = 0;
     let bestStreak = Number(localStorage.getItem("bestStreak") || 0);
 
-    // Timer mode state
+    // Timer mode
     let isTimerMode = false;
     let timeLeft = 60;
     let timerId = null;
-    let score = 0; // number correct in timer mode
+    let score = 0;
 
-    // -------- HELPERS --------
+    // ---------- HELPERS ----------
     function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     function nearlyEqual(a, b, eps = 1e-6) { return Math.abs(a - b) < eps; }
@@ -204,7 +327,6 @@
     }
 
     function endTimerMode() {
-      // lock practice input by showing results modal
       answerEl.blur();
       modalBackdrop.classList.add("active");
       scoreLine.textContent = `Score: ${score}`;
@@ -218,10 +340,13 @@
       const p = generateProblem();
       currentAnswer = p.answer;
       problemEl.textContent = p.prompt;
+
       feedbackEl.textContent = "";
       feedbackEl.className = "feedback";
+
       answerEl.value = "";
       answerEl.focus();
+
       updateCenterPill();
     }
 
@@ -236,7 +361,6 @@
     }
 
     function submit() {
-      // If timer mode ended and modal is up, ignore submits
       if (modalBackdrop.classList.contains("active")) return;
 
       const raw = answerEl.value.trim();
@@ -253,7 +377,7 @@
           streak++;
           if (streak > bestStreak) {
             bestStreak = streak;
-            localStorage.setItem("bestStreak", bestStreak);
+            localStorage.setItem("bestStreak", String(bestStreak));
           }
         } else {
           score++;
@@ -287,7 +411,7 @@
         score = 0;
         streak = 0;
       } else {
-        streak = 0; // not used, but keep clean
+        streak = 0; // not used in timer mode
         score = 0;
         const seconds = Number(timeLimit.value || 60);
         startTimer(seconds);
@@ -300,9 +424,10 @@
       stopTimer();
       closeModal();
       setScreen("menu");
+      updateCenterPill();
     }
 
-    // -------- ELEMENTS --------
+    // ---------- ELEMENTS ----------
     const startBtn = document.getElementById("startBtn");
     const exitBtn = document.getElementById("exitBtn");
     const submitBtn = document.getElementById("submitBtn");
@@ -326,29 +451,28 @@
     const restartBtn = document.getElementById("restartBtn");
     const exitBtn2 = document.getElementById("exitBtn2");
 
-    // -------- EVENTS --------
+    // ---------- EVENTS ----------
     timerMode.addEventListener("change", () => {
-      timerSettings.style.display = timerMode.checked ? "flex" : "none";
+      timerSettings.style.display = timerMode.checked ? "block" : "none";
     });
 
-    startBtn.onclick = startPracticeFromMenu;
+    startBtn.addEventListener("click", startPracticeFromMenu);
 
-    exitBtn.onclick = exitToMenu;
-    exitBtn2.onclick = exitToMenu;
+    exitBtn.addEventListener("click", exitToMenu);
+    exitBtn2.addEventListener("click", exitToMenu);
 
-    restartBtn.onclick = () => {
-      // restart with same settings
+    restartBtn.addEventListener("click", () => {
       closeModal();
       startPracticeFromMenu();
-    };
+    });
 
-    submitBtn.onclick = submit;
+    submitBtn.addEventListener("click", submit);
 
-    answerEl.addEventListener("keydown", e => {
+    answerEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") submit();
     });
 
-    // Initialize pill display for first load
+    // Initialize
     updateCenterPill();
   </script>
 </body>
