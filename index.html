@@ -1,10 +1,654 @@
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /scores/{doc} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if false;
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+
+  <!-- App-like iPhone behavior -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mental Math" />
+
+  <!-- Icon (optional) -->
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="icon" type="image/png" href="icon.png" />
+
+  <title>Mental Math</title>
+
+  <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
     }
-  }
-}
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0b0d12;
+      color: #e9eefc;
+    }
+
+    .wrap { max-width: 720px; margin: 0 auto; padding: 20px; }
+    .card { background: #121726; border: 1px solid #232b3f; border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .muted { color: #a8b3d6; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .grid { display: grid; gap: 10px; }
+    .split { display:flex; gap: 10px; align-items:center; }
+
+    label.chk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #232b3f;
+      border-radius: 14px;
+      background: #0f1422;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] { width: 18px; height: 18px; }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .primary { background: #4f7cff; color: white; }
+    .secondary { background: #232b3f; color: #e9eefc; }
+
+    select, input.text {
+      width: 100%;
+      font-size: 16px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px; }
+    .pill {
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid #232b3f;
+      border-radius: 999px;
+      background: #0f1422;
+      color: #a8b3d6;
+      white-space: nowrap;
+    }
+
+    .problem { font-size: 44px; font-weight: 800; text-align: center; margin: 18px 0 10px; }
+    .inputAnswer {
+      width: 100%;
+      font-size: 20px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .feedback { height: 26px; text-align: center; font-weight: 700; margin-top: 10px; }
+    .ok { color: #43d17a; }
+    .bad { color: #ff6b6b; }
+
+    /* Modal */
+    .modalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modalBackdrop.active { display: flex; }
+    .modal { max-width: 520px; width: 100%; }
+    .big { font-size: 34px; font-weight: 900; text-align: center; margin: 6px 0; }
+
+    /* Leaderboard list */
+    .lbRow {
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px;
+      border: 1px solid #232b3f;
+      border-radius: 14px;
+      background: #0f1422;
+    }
+    .lbLeft { display:flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .lbName { font-weight: 800; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 420px; }
+    .lbMeta { font-size: 12px; color: #a8b3d6; }
+    .lbScore { font-weight: 900; font-size: 18px; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- MENU -->
+    <div id="menu" class="screen active">
+      <div class="card">
+        <h1>Mental Math</h1>
+        <div class="muted">Choose problem types, then press Start.</div>
+
+        <div class="grid" style="margin-top:14px;">
+          <label class="chk"><input type="checkbox" id="add" checked> Add</label>
+          <label class="chk"><input type="checkbox" id="sub"> Subtract</label>
+          <label class="chk"><input type="checkbox" id="mul"> Multiply</label>
+          <label class="chk"><input type="checkbox" id="div"> Divide</label>
+          <label class="chk"><input type="checkbox" id="pct"> Percent</label>
+        </div>
+
+        <div class="grid" style="margin-top:14px;">
+          <label class="chk">
+            <input type="checkbox" id="timerMode">
+            Timer mode
+          </label>
+
+          <div id="timerSettings" style="display:none;">
+            <div class="muted" style="font-size:12px; margin: 6px 0 6px;">Time limit</div>
+            <select id="timeLimit">
+              <option value="30">30 seconds</option>
+              <option value="60" selected>60 seconds</option>
+              <option value="90">90 seconds</option>
+              <option value="120">120 seconds</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+          <button id="startBtn" class="primary" style="flex:1;">Start</button>
+          <button id="leaderboardBtn" class="secondary" style="flex:1;">Leaderboard</button>
+        </div>
+
+        <div class="muted" style="margin-top:10px; font-size: 13px;">
+          iPhone tip: open in Safari → Share → Add to Home Screen.
+        </div>
+      </div>
+    </div>
+
+    <!-- PRACTICE -->
+    <div id="practice" class="screen">
+      <div class="card">
+        <div class="topbar">
+          <button id="exitBtn" class="secondary">Exit</button>
+          <div id="centerPill" class="pill">Streak: 0 | Best: 0</div>
+          <div style="width:64px;"></div>
+        </div>
+
+        <div id="problem" class="problem">Loading…</div>
+
+        <input id="answer" class="inputAnswer" inputmode="decimal" placeholder="Type answer" autocomplete="off" />
+
+        <div class="row" style="margin-top:12px;">
+          <button id="submitBtn" class="primary" style="flex:1;">Submit</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="leaderboard" class="screen">
+      <div class="card">
+        <div class="topbar">
+          <button id="backBtn" class="secondary">Back</button>
+          <div class="pill">Global Leaderboard</div>
+          <div style="width:64px;"></div>
+        </div>
+
+        <div class="muted" style="margin-bottom:10px;">
+          Top scores from Timer mode (global).
+        </div>
+
+        <div class="row" style="margin-bottom:10px;">
+          <button id="refreshLbBtn" class="secondary" style="flex:1;">Refresh</button>
+        </div>
+
+        <div id="lbStatus" class="muted" style="margin-bottom:10px; font-size: 13px;"></div>
+        <div id="lbList" class="grid"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TIMER RESULTS MODAL -->
+  <div id="modalBackdrop" class="modalBackdrop">
+    <div class="modal card">
+      <div class="muted" style="text-align:center;">Time’s up</div>
+      <div id="scoreLine" class="big">Score: 0</div>
+
+      <div class="muted" style="text-align:center; margin: 6px 0 10px;">
+        Enter your name to post your score.
+      </div>
+
+      <div class="grid" style="margin-bottom:10px;">
+        <input id="nameInput" class="text" type="text" maxlength="20" placeholder="Your name (max 20)" />
+        <div class="muted" style="font-size: 12px;">
+          Tip: use a nickname. Scores are public.
+        </div>
+      </div>
+
+      <div class="row" style="margin-bottom:10px;">
+        <button id="submitScoreBtn" class="primary" style="flex:1;">Submit Score</button>
+        <button id="skipBtn" class="secondary" style="flex:1;">Skip</button>
+      </div>
+
+      <div id="submitStatus" class="muted" style="text-align:center; font-size: 13px; min-height: 18px;"></div>
+
+      <div class="row" style="margin-top:10px;">
+        <button id="restartBtn" class="primary" style="flex:1;">Restart</button>
+        <button id="exitBtn2" class="secondary" style="flex:1;">Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase (no npm needed for GitHub Pages) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDONN7TlyRODTneVlM3cbc3IFOxZmg5hkI",
+      authDomain: "mental-math-ea932.firebaseapp.com",
+      projectId: "mental-math-ea932",
+      storageBucket: "mental-math-ea932.firebasestorage.app",
+      messagingSenderId: "943851684376",
+      appId: "1:943851684376:web:fdfc75f05b26610fe0796d",
+      measurementId: "G-Z1GR0BQCCN"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Expose minimal API to non-module script
+    window.leaderboardApi = {
+      async postScore(name, score) {
+        const cleanName = String(name || "").trim().slice(0, 20) || "Anonymous";
+        const cleanScore = Number(score) || 0;
+
+        await addDoc(collection(db, "scores"), {
+          name: cleanName,
+          score: cleanScore,
+          createdAt: serverTimestamp()
+        });
+      },
+
+      async fetchTopScores(max = 20) {
+        const q = query(collection(db, "scores"), orderBy("score", "desc"), limit(max));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => d.data());
+      }
+    };
+  </script>
+
+  <script>
+    // ---------- STATE ----------
+    let selectedTypes = ["add"];
+    let currentAnswer = 0;
+
+    // Streak mode
+    let streak = 0;
+    let bestStreak = Number(localStorage.getItem("bestStreak") || 0);
+
+    // Timer mode
+    let isTimerMode = false;
+    let timeLeft = 60;
+    let timerId = null;
+    let score = 0;
+
+    // ---------- HELPERS ----------
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function nearlyEqual(a, b, eps = 1e-6) { return Math.abs(a - b) < eps; }
+
+    function generateProblem() {
+      const t = pick(selectedTypes);
+
+      if (t === "add") {
+        const a = randInt(1, 99), b = randInt(1, 99);
+        return { prompt: `${a} + ${b}`, answer: a + b };
+      }
+      if (t === "sub") {
+        const a = randInt(1, 99), b = randInt(1, 99);
+        return { prompt: `${a} − ${b}`, answer: a - b };
+      }
+      if (t === "mul") {
+        const a = randInt(2, 20), b = randInt(2, 20);
+        return { prompt: `${a} × ${b}`, answer: a * b };
+      }
+      if (t === "div") {
+        const b = randInt(2, 20);
+        const ans = randInt(2, 20);
+        return { prompt: `${b * ans} ÷ ${b}`, answer: ans };
+      }
+      if (t === "pct") {
+        const options = [5, 10, 12.5, 15, 20, 25, 30, 40, 50, 75];
+        const p = pick(options);
+        const base = randInt(20, 200);
+        return { prompt: `${p}% of ${base}`, answer: (p / 100) * base };
+      }
+    }
+
+    function setScreen(name) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(name).classList.add("active");
+    }
+
+    function updateCenterPill() {
+      if (!isTimerMode) {
+        centerPill.textContent = `Streak: ${streak} | Best: ${bestStreak}`;
+      } else {
+        centerPill.textContent = `Time: ${timeLeft}s | Score: ${score}`;
+      }
+    }
+
+    function stopTimer() {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function startTimer(seconds) {
+      stopTimer();
+      timeLeft = seconds;
+      updateCenterPill();
+
+      timerId = setInterval(() => {
+        timeLeft -= 1;
+        updateCenterPill();
+        if (timeLeft <= 0) {
+          stopTimer();
+          endTimerMode();
+        }
+      }, 1000);
+    }
+
+    function endTimerMode() {
+      answerEl.blur();
+      modalBackdrop.classList.add("active");
+      scoreLine.textContent = `Score: ${score}`;
+      submitStatus.textContent = "";
+      nameInput.value = (localStorage.getItem("lastName") || "");
+      nameInput.focus();
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("active");
+      submitStatus.textContent = "";
+    }
+
+    function nextProblem() {
+      const p = generateProblem();
+      currentAnswer = p.answer;
+      problemEl.textContent = p.prompt;
+
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+
+      answerEl.value = "";
+      answerEl.focus();
+
+      updateCenterPill();
+    }
+
+    function readSelectedTypes() {
+      const types = [];
+      if (add.checked) types.push("add");
+      if (sub.checked) types.push("sub");
+      if (mul.checked) types.push("mul");
+      if (div.checked) types.push("div");
+      if (pct.checked) types.push("pct");
+      return types.length ? types : ["add"];
+    }
+
+    function submitAnswer() {
+      if (modalBackdrop.classList.contains("active")) return;
+
+      const raw = answerEl.value.trim();
+      if (!raw) return;
+
+      const val = Number(raw.replace(",", "."));
+      const ok = Number.isFinite(val) && nearlyEqual(val, currentAnswer, 1e-4);
+
+      if (ok) {
+        feedbackEl.textContent = "Correct!";
+        feedbackEl.className = "feedback ok";
+
+        if (!isTimerMode) {
+          streak++;
+          if (streak > bestStreak) {
+            bestStreak = streak;
+            localStorage.setItem("bestStreak", String(bestStreak));
+          }
+        } else {
+          score++;
+        }
+
+        updateCenterPill();
+        setTimeout(nextProblem, 150);
+      } else {
+        feedbackEl.textContent = "Incorrect";
+        feedbackEl.className = "feedback bad";
+
+        if (!isTimerMode) {
+          streak = 0;
+          updateCenterPill();
+        }
+
+        answerEl.value = "";
+        answerEl.focus();
+      }
+    }
+
+    function startPracticeFromMenu() {
+      selectedTypes = readSelectedTypes();
+      isTimerMode = timerMode.checked;
+
+      closeModal();
+      setScreen("practice");
+
+      if (!isTimerMode) {
+        stopTimer();
+        score = 0;
+        streak = 0;
+      } else {
+        streak = 0;
+        score = 0;
+        const seconds = Number(timeLimit.value || 60);
+        startTimer(seconds);
+      }
+
+      nextProblem();
+    }
+
+    function exitToMenu() {
+      stopTimer();
+      closeModal();
+      setScreen("menu");
+      updateCenterPill();
+    }
+
+    async function loadLeaderboard() {
+      lbStatus.textContent = "Loading leaderboard…";
+      lbList.innerHTML = "";
+
+      if (!window.leaderboardApi) {
+        lbStatus.textContent = "Leaderboard not ready yet. Refresh and try again.";
+        return;
+      }
+
+      try {
+        const rows = await window.leaderboardApi.fetchTopScores(20);
+        lbStatus.textContent = rows.length ? "" : "No scores yet. Be the first!";
+
+        rows.forEach((r, idx) => {
+          const name = (r.name || "Anonymous");
+          const sc = (Number(r.score) || 0);
+
+          const el = document.createElement("div");
+          el.className = "lbRow";
+
+          const left = document.createElement("div");
+          left.className = "lbLeft";
+
+          const nm = document.createElement("div");
+          nm.className = "lbName";
+          nm.textContent = `${idx + 1}. ${name}`;
+
+          const meta = document.createElement("div");
+          meta.className = "lbMeta";
+          meta.textContent = "Timer mode";
+
+          const right = document.createElement("div");
+          right.className = "lbScore";
+          right.textContent = String(sc);
+
+          left.appendChild(nm);
+          left.appendChild(meta);
+          el.appendChild(left);
+          el.appendChild(right);
+
+          lbList.appendChild(el);
+        });
+      } catch (e) {
+        console.error(e);
+        lbStatus.textContent = "Could not load leaderboard. Check Firestore rules or connection.";
+      }
+    }
+
+    async function submitScore() {
+      if (!window.leaderboardApi) {
+        submitStatus.textContent = "Leaderboard not ready. Refresh the page and try again.";
+        return;
+      }
+
+      submitScoreBtn.disabled = true;
+      submitStatus.textContent = "Submitting…";
+
+      try {
+        const name = (nameInput.value || "").trim().slice(0, 20) || "Anonymous";
+        localStorage.setItem("lastName", name);
+
+        await window.leaderboardApi.postScore(name, score);
+        submitStatus.textContent = "Posted! Opening leaderboard…";
+
+        // show leaderboard
+        setTimeout(async () => {
+          closeModal();
+          setScreen("leaderboard");
+          await loadLeaderboard();
+          submitScoreBtn.disabled = false;
+          submitStatus.textContent = "";
+        }, 500);
+      } catch (e) {
+        console.error(e);
+        submitStatus.textContent = "Submit failed. (Likely Firestore rules.)";
+        submitScoreBtn.disabled = false;
+      }
+    }
+
+    // ---------- ELEMENTS ----------
+    const startBtn = document.getElementById("startBtn");
+    const leaderboardBtn = document.getElementById("leaderboardBtn");
+    const backBtn = document.getElementById("backBtn");
+    const refreshLbBtn = document.getElementById("refreshLbBtn");
+
+    const exitBtn = document.getElementById("exitBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const problemEl = document.getElementById("problem");
+    const answerEl = document.getElementById("answer");
+    const feedbackEl = document.getElementById("feedback");
+    const centerPill = document.getElementById("centerPill");
+
+    const add = document.getElementById("add");
+    const sub = document.getElementById("sub");
+    const mul = document.getElementById("mul");
+    const div = document.getElementById("div");
+    const pct = document.getElementById("pct");
+
+    const timerMode = document.getElementById("timerMode");
+    const timerSettings = document.getElementById("timerSettings");
+    const timeLimit = document.getElementById("timeLimit");
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const scoreLine = document.getElementById("scoreLine");
+    const restartBtn = document.getElementById("restartBtn");
+    const exitBtn2 = document.getElementById("exitBtn2");
+    const submitScoreBtn = document.getElementById("submitScoreBtn");
+    const skipBtn = document.getElementById("skipBtn");
+    const nameInput = document.getElementById("nameInput");
+    const submitStatus = document.getElementById("submitStatus");
+
+    const lbList = document.getElementById("lbList");
+    const lbStatus = document.getElementById("lbStatus");
+
+    // ---------- EVENTS ----------
+    timerMode.addEventListener("change", () => {
+      timerSettings.style.display = timerMode.checked ? "block" : "none";
+    });
+
+    startBtn.addEventListener("click", startPracticeFromMenu);
+    submitBtn.addEventListener("click", submitAnswer);
+    answerEl.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAnswer(); });
+
+    exitBtn.addEventListener("click", exitToMenu);
+    exitBtn2.addEventListener("click", exitToMenu);
+
+    restartBtn.addEventListener("click", () => {
+      closeModal();
+      startPracticeFromMenu();
+    });
+
+    skipBtn.addEventListener("click", () => {
+      // skip submitting and just close modal
+      closeModal();
+    });
+
+    submitScoreBtn.addEventListener("click", submitScore);
+    nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitScore(); });
+
+    leaderboardBtn.addEventListener("click", async () => {
+      setScreen("leaderboard");
+      await loadLeaderboard();
+    });
+
+    backBtn.addEventListener("click", () => {
+      setScreen("menu");
+    });
+
+    refreshLbBtn.addEventListener("click", loadLeaderboard);
+
+    // Initialize
+    updateCenterPill();
+  </script>
+</body>
+</html>
