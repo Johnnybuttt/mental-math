@@ -5,148 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mental Math</title>
 
-  <!-- iPhone app-like behavior -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mental Math">
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" href="icon.png">
 
   <style>
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      margin: 0;
-      background: #0b0d12;
-      color: #e9eefc;
-    }
-
-    .wrap {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .card {
-      background: #121726;
-      border: 1px solid #232b3f;
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-    }
-
-    .muted {
-      color: #a8b3d6;
-    }
-
-    .row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    label.chk {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid #232b3f;
-      border-radius: 14px;
-      background: #0f1422;
-      cursor: pointer;
-    }
-
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-    }
-
-    button {
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .primary {
-      background: #4f7cff;
-      color: white;
-    }
-
-    .secondary {
-      background: #232b3f;
-      color: #e9eefc;
-    }
-
-    .screen {
-      display: none;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    .problem {
-      font-size: 44px;
-      font-weight: 800;
-      text-align: center;
-      margin: 18px 0 10px;
-    }
-
-    .input {
-      width: 100%;
-      font-size: 20px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid #232b3f;
-      background: #0f1422;
-      color: #e9eefc;
-      outline: none;
-    }
-
-    .feedback {
-      height: 26px;
-      text-align: center;
-      font-weight: 700;
-      margin-top: 10px;
-    }
-
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #0b0d12; color: #e9eefc; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 20px; }
+    .card { background: #121726; border: 1px solid #232b3f; border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .muted { color: #a8b3d6; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .grid { display: grid; gap: 10px; }
+    label.chk { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #232b3f; border-radius: 14px; background: #0f1422; cursor: pointer; }
+    input[type="checkbox"] { width: 18px; height: 18px; }
+    button { border: 0; border-radius: 14px; padding: 12px 14px; font-weight: 700; cursor: pointer; }
+    .primary { background: #4f7cff; color: white; }
+    .secondary { background: #232b3f; color: #e9eefc; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .problem { font-size: 44px; font-weight: 800; text-align: center; margin: 18px 0 10px; }
+    .input { width: 100%; font-size: 20px; padding: 12px 14px; border-radius: 14px; border: 1px solid #232b3f; background: #0f1422; color: #e9eefc; outline: none; }
+    .feedback { height: 26px; text-align: center; font-weight: 700; margin-top: 10px; }
     .ok { color: #43d17a; }
     .bad { color: #ff6b6b; }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .pill {
-      font-size: 12px;
-      padding: 6px 10px;
-      border: 1px solid #232b3f;
-      border-radius: 999px;
-      background: #0f1422;
-      color: #a8b3d6;
-    }
+    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px; }
+    .pill { font-size: 12px; padding: 6px 10px; border: 1px solid #232b3f; border-radius: 999px; background:#0f1422; color:#a8b3d6; white-space: nowrap; }
+    .split { display:flex; gap: 10px; }
+    .grow { flex: 1; }
+    select { width: 100%; font-size: 16px; padding: 10px 12px; border-radius: 14px; border: 1px solid #232b3f; background: #0f1422; color: #e9eefc; }
+    .modalBackdrop { position: fixed; inset: 0; background: rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; padding: 20px; }
+    .modalBackdrop.active { display:flex; }
+    .modal { max-width: 520px; width: 100%; }
+    .big { font-size: 34px; font-weight: 900; text-align:center; margin: 6px 0; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
 
-    <!-- MENU SCREEN -->
+    <!-- MENU -->
     <div id="menu" class="screen active">
       <div class="card">
         <h1>Mental Math</h1>
@@ -160,30 +58,43 @@
           <label class="chk"><input type="checkbox" id="pct"> Percent</label>
         </div>
 
+        <div class="grid" style="margin-top:14px;">
+          <label class="chk">
+            <input type="checkbox" id="timerMode">
+            Timer mode
+          </label>
+
+          <div id="timerSettings" class="split" style="display:none;">
+            <div class="grow">
+              <div class="muted" style="font-size:12px; margin: 6px 0 6px;">Time</div>
+              <select id="timeLimit">
+                <option value="30">30 seconds</option>
+                <option value="60" selected>60 seconds</option>
+                <option value="90">90 seconds</option>
+                <option value="120">120 seconds</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div class="row" style="margin-top:14px;">
           <button id="startBtn" class="primary" style="flex:1;">Start</button>
         </div>
       </div>
     </div>
 
-    <!-- PRACTICE SCREEN -->
+    <!-- PRACTICE -->
     <div id="practice" class="screen">
       <div class="card">
         <div class="topbar">
           <button id="exitBtn" class="secondary">Exit</button>
-          <div id="streakPill" class="pill">Streak: 0 | Best: 0</div>
+          <div id="centerPill" class="pill">Streak: 0 | Best: 0</div>
           <div style="width:64px;"></div>
         </div>
 
         <div id="problem" class="problem">Loading…</div>
 
-        <input
-          id="answer"
-          class="input"
-          inputmode="decimal"
-          placeholder="Type answer"
-          autocomplete="off"
-        />
+        <input id="answer" class="input" inputmode="decimal" placeholder="Type answer" autocomplete="off" />
 
         <div class="row" style="margin-top:12px;">
           <button id="submitBtn" class="primary" style="flex:1;">Submit</button>
@@ -195,25 +106,39 @@
 
   </div>
 
+  <!-- RESULTS MODAL (timer mode) -->
+  <div id="modalBackdrop" class="modalBackdrop">
+    <div class="modal card">
+      <div class="muted" style="text-align:center;">Time’s up</div>
+      <div id="scoreLine" class="big">Score: 0</div>
+      <div class="muted" style="text-align:center; margin-bottom:12px;">
+        Correct answers during the timer.
+      </div>
+      <div class="row">
+        <button id="restartBtn" class="primary" style="flex:1;">Restart</button>
+        <button id="exitBtn2" class="secondary" style="flex:1;">Exit</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // -------- STATE --------
     let selectedTypes = ["add"];
     let currentAnswer = 0;
+
     let streak = 0;
     let bestStreak = Number(localStorage.getItem("bestStreak") || 0);
 
+    // Timer mode state
+    let isTimerMode = false;
+    let timeLeft = 60;
+    let timerId = null;
+    let score = 0; // number correct in timer mode
+
     // -------- HELPERS --------
-    function randInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    function pick(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    function nearlyEqual(a, b, eps = 1e-6) {
-      return Math.abs(a - b) < eps;
-    }
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function nearlyEqual(a, b, eps = 1e-6) { return Math.abs(a - b) < eps; }
 
     function generateProblem() {
       const t = pick(selectedTypes);
@@ -222,23 +147,19 @@
         const a = randInt(1, 99), b = randInt(1, 99);
         return { prompt: `${a} + ${b}`, answer: a + b };
       }
-
       if (t === "sub") {
         const a = randInt(1, 99), b = randInt(1, 99);
         return { prompt: `${a} − ${b}`, answer: a - b };
       }
-
       if (t === "mul") {
         const a = randInt(2, 20), b = randInt(2, 20);
         return { prompt: `${a} × ${b}`, answer: a * b };
       }
-
       if (t === "div") {
         const b = randInt(2, 20);
         const ans = randInt(2, 20);
         return { prompt: `${b * ans} ÷ ${b}`, answer: ans };
       }
-
       if (t === "pct") {
         const options = [5, 10, 12.5, 15, 20, 25, 30, 40, 50, 75];
         const p = pick(options);
@@ -252,8 +173,45 @@
       document.getElementById(name).classList.add("active");
     }
 
-    function updateStreakUI() {
-      streakPill.textContent = `Streak: ${streak} | Best: ${bestStreak}`;
+    function updateCenterPill() {
+      if (!isTimerMode) {
+        centerPill.textContent = `Streak: ${streak} | Best: ${bestStreak}`;
+      } else {
+        centerPill.textContent = `Time: ${timeLeft}s | Score: ${score}`;
+      }
+    }
+
+    function stopTimer() {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function startTimer(seconds) {
+      stopTimer();
+      timeLeft = seconds;
+      updateCenterPill();
+
+      timerId = setInterval(() => {
+        timeLeft -= 1;
+        updateCenterPill();
+        if (timeLeft <= 0) {
+          stopTimer();
+          endTimerMode();
+        }
+      }, 1000);
+    }
+
+    function endTimerMode() {
+      // lock practice input by showing results modal
+      answerEl.blur();
+      modalBackdrop.classList.add("active");
+      scoreLine.textContent = `Score: ${score}`;
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("active");
     }
 
     function nextProblem() {
@@ -264,7 +222,7 @@
       feedbackEl.className = "feedback";
       answerEl.value = "";
       answerEl.focus();
-      updateStreakUI();
+      updateCenterPill();
     }
 
     function readSelectedTypes() {
@@ -278,6 +236,9 @@
     }
 
     function submit() {
+      // If timer mode ended and modal is up, ignore submits
+      if (modalBackdrop.classList.contains("active")) return;
+
       const raw = answerEl.value.trim();
       if (!raw) return;
 
@@ -285,23 +246,60 @@
       const ok = Number.isFinite(val) && nearlyEqual(val, currentAnswer, 1e-4);
 
       if (ok) {
-        streak++;
-        if (streak > bestStreak) {
-          bestStreak = streak;
-          localStorage.setItem("bestStreak", bestStreak);
-        }
         feedbackEl.textContent = "Correct!";
         feedbackEl.className = "feedback ok";
-        updateStreakUI();
-        setTimeout(nextProblem, 200);
+
+        if (!isTimerMode) {
+          streak++;
+          if (streak > bestStreak) {
+            bestStreak = streak;
+            localStorage.setItem("bestStreak", bestStreak);
+          }
+        } else {
+          score++;
+        }
+
+        updateCenterPill();
+        setTimeout(nextProblem, 150);
       } else {
-        streak = 0;
         feedbackEl.textContent = "Incorrect";
         feedbackEl.className = "feedback bad";
-        updateStreakUI();
+
+        if (!isTimerMode) {
+          streak = 0;
+          updateCenterPill();
+        }
+
         answerEl.value = "";
         answerEl.focus();
       }
+    }
+
+    function startPracticeFromMenu() {
+      selectedTypes = readSelectedTypes();
+      isTimerMode = timerMode.checked;
+
+      closeModal();
+      setScreen("practice");
+
+      if (!isTimerMode) {
+        stopTimer();
+        score = 0;
+        streak = 0;
+      } else {
+        streak = 0; // not used, but keep clean
+        score = 0;
+        const seconds = Number(timeLimit.value || 60);
+        startTimer(seconds);
+      }
+
+      nextProblem();
+    }
+
+    function exitToMenu() {
+      stopTimer();
+      closeModal();
+      setScreen("menu");
     }
 
     // -------- ELEMENTS --------
@@ -311,7 +309,7 @@
     const problemEl = document.getElementById("problem");
     const answerEl = document.getElementById("answer");
     const feedbackEl = document.getElementById("feedback");
-    const streakPill = document.getElementById("streakPill");
+    const centerPill = document.getElementById("centerPill");
 
     const add = document.getElementById("add");
     const sub = document.getElementById("sub");
@@ -319,22 +317,39 @@
     const div = document.getElementById("div");
     const pct = document.getElementById("pct");
 
-    // -------- EVENTS --------
-    startBtn.onclick = () => {
-      selectedTypes = readSelectedTypes();
-      streak = 0;
-      setScreen("practice");
-      nextProblem();
-    };
+    const timerMode = document.getElementById("timerMode");
+    const timerSettings = document.getElementById("timerSettings");
+    const timeLimit = document.getElementById("timeLimit");
 
-    exitBtn.onclick = () => {
-      setScreen("menu");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const scoreLine = document.getElementById("scoreLine");
+    const restartBtn = document.getElementById("restartBtn");
+    const exitBtn2 = document.getElementById("exitBtn2");
+
+    // -------- EVENTS --------
+    timerMode.addEventListener("change", () => {
+      timerSettings.style.display = timerMode.checked ? "flex" : "none";
+    });
+
+    startBtn.onclick = startPracticeFromMenu;
+
+    exitBtn.onclick = exitToMenu;
+    exitBtn2.onclick = exitToMenu;
+
+    restartBtn.onclick = () => {
+      // restart with same settings
+      closeModal();
+      startPracticeFromMenu();
     };
 
     submitBtn.onclick = submit;
+
     answerEl.addEventListener("keydown", e => {
       if (e.key === "Enter") submit();
     });
+
+    // Initialize pill display for first load
+    updateCenterPill();
   </script>
 </body>
 </html>
