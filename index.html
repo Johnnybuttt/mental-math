@@ -14,57 +14,89 @@
   <title>Mental Math</title>
 
   <style>
+    html, body { margin: 0; height: 100%; }
     body {
-      margin: 0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: #0b0d12;
       color: #e9eefc;
       overscroll-behavior: none;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .wrap { max-width: 720px; margin: auto; padding: 20px; }
-    .card { background: #121726; border: 1px solid #232b3f; border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+
+    .wrap { max-width: 720px; margin: 0 auto; padding: 20px; }
+    .card {
+      background: #121726;
+      border: 1px solid #232b3f;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
     h1 { margin: 0 0 10px; font-size: 28px; }
     .muted { color: #a8b3d6; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    button {
-      border: none; border-radius: 14px;
-      padding: 12px; font-weight: 700;
-      cursor: pointer;
-      touch-action: manipulation;
-      flex: 1;
-    }
-    .primary { background: #4f7cff; color: white; }
-    .secondary { background: #232b3f; color: white; }
+
     .screen { display: none; }
     .screen.active { display: block; }
 
-    .problem { font-size: 42px; text-align: center; margin: 18px 0; font-weight: 900; }
-    input.answer {
-      width: 100%;
-      font-size: 22px;
-      padding: 12px;
-      border-radius: 14px;
+    .grid { display: grid; gap: 10px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+    label.chk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
       border: 1px solid #232b3f;
+      border-radius: 14px;
       background: #0f1422;
-      color: #e9eefc;
-      box-sizing: border-box;
-      outline: none;
+      cursor: pointer;
     }
+
+    input[type="checkbox"] { width: 18px; height: 18px; }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .primary { background: #4f7cff; color: white; }
+    .secondary { background: #232b3f; color: #e9eefc; }
+
     .pill {
-      display: inline-block;
       font-size: 12px;
       padding: 6px 10px;
       border: 1px solid #232b3f;
       border-radius: 999px;
       background: #0f1422;
       color: #a8b3d6;
-      margin-bottom: 10px;
+      white-space: nowrap;
     }
-    .feedback { text-align: center; height: 26px; font-weight: 800; margin-top: 10px; }
+
+    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 10px; }
+
+    .problem { font-size: 44px; font-weight: 900; text-align: center; margin: 18px 0 10px; }
+
+    input.answer {
+      width: 100%;
+      font-size: 20px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .feedback { height: 26px; text-align: center; font-weight: 800; margin-top: 10px; }
     .ok { color: #43d17a; }
     .bad { color: #ff6b6b; }
 
+    /* Leaderboard rows */
     .lbRow {
       display:flex;
       justify-content: space-between;
@@ -74,34 +106,13 @@
       border: 1px solid #232b3f;
       border-radius: 14px;
       background: #0f1422;
-      margin-bottom: 10px;
     }
     .lbLeft { display:flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .lbName { font-weight: 900; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 480px; }
+    .lbName { font-weight: 900; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 420px; }
     .lbMeta { font-size: 12px; color: #a8b3d6; }
     .lbScore { font-weight: 900; font-size: 18px; }
 
-    /* Celebration overlay */
-    #celebrate {
-      display: none;
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-    }
-    #confetti {
-      position: absolute;
-      inset: 0;
-    }
-    #bounce {
-      position: absolute;
-      width: 96px;
-      height: 96px;
-      left: 20px;
-      top: 20px;
-    }
-
-    /* Simple modal (timer finish) */
+    /* Timer modal */
     #modal {
       display: none;
       position: fixed;
@@ -125,6 +136,27 @@
       outline: none;
     }
     .big { font-size: 34px; font-weight: 1000; text-align:center; margin: 10px 0; }
+
+    /* Celebration overlay */
+    #celebrate {
+      display: none;
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    #confetti {
+      position: absolute;
+      inset: 0;
+    }
+    /* 1) DOUBLE SIZE (was 96px, now 192px) */
+    #bounce {
+      position: absolute;
+      width: 192px;
+      height: 192px;
+      left: 20px;
+      top: 20px;
+    }
   </style>
 </head>
 
@@ -135,18 +167,28 @@
     <div id="menu" class="screen active">
       <div class="card">
         <h1>Mental Math</h1>
-        <div class="muted">Practice forever or run Timer mode and post your best score.</div>
+        <div class="muted">Choose problem types. Timer mode is always 60 seconds.</div>
 
-        <div style="margin-top:14px;">
-          <label style="display:flex; gap:10px; align-items:center;">
+        <!-- 2/3) All modes back -->
+        <div class="grid" style="margin-top:14px;">
+          <label class="chk"><input type="checkbox" id="add" checked /> Add</label>
+          <label class="chk"><input type="checkbox" id="sub" /> Subtract</label>
+          <label class="chk"><input type="checkbox" id="mul" /> Multiply</label>
+          <label class="chk"><input type="checkbox" id="div" /> Divide</label>
+          <label class="chk"><input type="checkbox" id="pct" /> Percent</label>
+        </div>
+
+        <!-- 4) Timer is only 60 seconds -->
+        <div class="grid" style="margin-top:14px;">
+          <label class="chk">
             <input type="checkbox" id="timerMode" />
             Timer mode (60 seconds)
           </label>
         </div>
 
         <div class="row" style="margin-top:14px;">
-          <button class="primary" id="startBtn">Start</button>
-          <button class="secondary" id="leaderBtn">Leaderboard</button>
+          <button id="startBtn" class="primary" style="flex:1;">Start</button>
+          <button id="leaderBtn" class="secondary" style="flex:1;">Leaderboard</button>
         </div>
 
         <div class="muted" style="margin-top:12px; font-size: 13px;">
@@ -158,17 +200,18 @@
     <!-- GAME -->
     <div id="game" class="screen">
       <div class="card">
-        <div class="row" style="margin-bottom:10px;">
-          <button class="secondary" id="exitBtn" style="flex:0 0 auto;">Exit</button>
-          <div class="pill" id="statusPill">Streak: 0 | Best: 0</div>
+        <div class="topbar">
+          <button id="exitBtn" class="secondary">Exit</button>
+          <div id="statusPill" class="pill">Streak: 0 | Best: 0</div>
+          <div style="width:64px;"></div>
         </div>
 
         <div id="problem" class="problem">Loading…</div>
 
-        <input id="answer" class="answer" inputmode="numeric" placeholder="Type answer" autocomplete="off" />
+        <input id="answer" class="answer" inputmode="decimal" placeholder="Type answer" autocomplete="off" />
 
         <div class="row" style="margin-top:12px;">
-          <button class="primary" id="submitBtn">Submit</button>
+          <button id="submitBtn" class="primary" style="flex:1;">Submit</button>
         </div>
 
         <div id="feedback" class="feedback"></div>
@@ -178,17 +221,18 @@
     <!-- LEADERBOARD -->
     <div id="leaderboard" class="screen">
       <div class="card">
-        <div class="row" style="margin-bottom:10px;">
-          <button class="secondary" id="backBtn" style="flex:0 0 auto;">Back</button>
+        <div class="topbar">
+          <button id="backBtn" class="secondary">Back</button>
           <div class="pill">Best score per name</div>
+          <div style="width:64px;"></div>
         </div>
 
         <div class="row" style="margin-bottom:10px;">
-          <button class="secondary" id="refreshBtn">Refresh</button>
+          <button id="refreshBtn" class="secondary" style="flex:1;">Refresh</button>
         </div>
 
         <div id="lbStatus" class="muted" style="margin-bottom:10px; font-size: 13px;"></div>
-        <div id="lbList"></div>
+        <div id="lbList" class="grid"></div>
       </div>
     </div>
 
@@ -207,15 +251,15 @@
       <input id="nameInput" class="name" maxlength="20" placeholder="Your name (max 20)" />
 
       <div class="row" style="margin-top:12px;">
-        <button class="primary" id="postBtn">Post Score</button>
-        <button class="secondary" id="skipBtn">Skip</button>
+        <button class="primary" id="postBtn" style="flex:1;">Post Score</button>
+        <button class="secondary" id="skipBtn" style="flex:1;">Skip</button>
       </div>
 
       <div id="postStatus" class="muted" style="text-align:center; margin-top:10px; min-height: 18px;"></div>
 
       <div class="row" style="margin-top:12px;">
-        <button class="primary" id="restartBtn">Restart</button>
-        <button class="secondary" id="exitBtn2">Exit</button>
+        <button class="primary" id="restartBtn" style="flex:1;">Restart</button>
+        <button class="secondary" id="exitBtn2" style="flex:1;">Exit</button>
       </div>
     </div>
   </div>
@@ -275,25 +319,14 @@
           const snap = await tx.get(ref);
 
           if (!snap.exists()) {
-            tx.set(ref, {
-              name: cleanName,
-              nameKey,
-              score: cleanScore,
-              updatedAt: serverTimestamp()
-            });
+            tx.set(ref, { name: cleanName, nameKey, score: cleanScore, updatedAt: serverTimestamp() });
             return { updated: true, previous: 0 };
           }
 
-          const current = snap.data();
-          const prev = Number(current.score) || 0;
+          const prev = Number(snap.data().score) || 0;
 
           if (cleanScore > prev) {
-            tx.set(ref, {
-              name: cleanName,
-              nameKey,
-              score: cleanScore,
-              updatedAt: serverTimestamp()
-            }, { merge: true });
+            tx.set(ref, { name: cleanName, nameKey, score: cleanScore, updatedAt: serverTimestamp() }, { merge: true });
             return { updated: true, previous: prev };
           }
 
@@ -318,23 +351,28 @@
     const game = document.getElementById("game");
     const leaderboard = document.getElementById("leaderboard");
 
-    // Controls
+    // Menu controls
+    const add = document.getElementById("add");
+    const sub = document.getElementById("sub");
+    const mul = document.getElementById("mul");
+    const div = document.getElementById("div");
+    const pct = document.getElementById("pct");
     const timerMode = document.getElementById("timerMode");
+
     const startBtn = document.getElementById("startBtn");
     const leaderBtn = document.getElementById("leaderBtn");
-    const exitBtn = document.getElementById("exitBtn");
-    const exitBtn2 = document.getElementById("exitBtn2");
-    const submitBtn = document.getElementById("submitBtn");
-    const backBtn = document.getElementById("backBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
 
-    // Game
+    // Game controls
+    const exitBtn = document.getElementById("exitBtn");
+    const submitBtn = document.getElementById("submitBtn");
     const statusPill = document.getElementById("statusPill");
     const problemEl = document.getElementById("problem");
     const answerEl = document.getElementById("answer");
     const feedbackEl = document.getElementById("feedback");
 
-    // Leaderboard
+    // Leaderboard controls
+    const backBtn = document.getElementById("backBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
     const lbStatus = document.getElementById("lbStatus");
     const lbList = document.getElementById("lbList");
 
@@ -346,6 +384,7 @@
     const skipBtn = document.getElementById("skipBtn");
     const postStatus = document.getElementById("postStatus");
     const restartBtn = document.getElementById("restartBtn");
+    const exitBtn2 = document.getElementById("exitBtn2");
 
     // Celebration
     const celebrateOverlay = document.getElementById("celebrate");
@@ -353,13 +392,15 @@
     const bounceImg = document.getElementById("bounce");
 
     // State
+    let selectedTypes = ["add"];
     let currentAnswer = 0;
+
     let streak = 0;
     let bestStreak = Number(localStorage.getItem("bestStreak") || 0);
 
     let isTimer = false;
     let score = 0;
-    let timeLeft = 60;
+    let timeLeft = 60;      // 4) fixed
     let timerId = null;
 
     function showScreen(id) {
@@ -371,6 +412,60 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function nearlyEqual(a, b, eps = 1e-6) {
+      return Math.abs(a - b) < eps;
+    }
+
+    function readSelectedTypes() {
+      const types = [];
+      if (add.checked) types.push("add");
+      if (sub.checked) types.push("sub");
+      if (mul.checked) types.push("mul");
+      if (div.checked) types.push("div");
+      if (pct.checked) types.push("pct");
+      return types.length ? types : ["add"];
+    }
+
+    // 2/3) Full problem generator
+    function generateProblem() {
+      const t = pick(selectedTypes);
+
+      if (t === "add") {
+        const a = randInt(1, 99), b = randInt(1, 99);
+        return { prompt: `${a} + ${b}`, answer: a + b };
+      }
+
+      if (t === "sub") {
+        const a = randInt(1, 99), b = randInt(1, 99);
+        return { prompt: `${a} − ${b}`, answer: a - b };
+      }
+
+      if (t === "mul") {
+        const a = randInt(2, 20), b = randInt(2, 20);
+        return { prompt: `${a} × ${b}`, answer: a * b };
+      }
+
+      if (t === "div") {
+        const b = randInt(2, 20);
+        const ans = randInt(2, 20);
+        return { prompt: `${b * ans} ÷ ${b}`, answer: ans };
+      }
+
+      if (t === "pct") {
+        const options = [5, 10, 12.5, 15, 20, 25, 30, 40, 50, 75];
+        const p = pick(options);
+        const base = randInt(20, 200);
+        return { prompt: `${p}% of ${base}`, answer: (p / 100) * base };
+      }
+
+      // fallback
+      return { prompt: "1 + 1", answer: 2 };
+    }
+
     function updateStatus() {
       if (!isTimer) {
         statusPill.textContent = `Streak: ${streak} | Best: ${bestStreak}`;
@@ -380,14 +475,16 @@
     }
 
     function newProblem() {
-      const a = randInt(1, 20);
-      const b = randInt(1, 20);
-      currentAnswer = a + b;
-      problemEl.textContent = `${a} + ${b}`;
-      answerEl.value = "";
-      answerEl.focus();
+      const p = generateProblem();
+      currentAnswer = p.answer;
+      problemEl.textContent = p.prompt;
+
       feedbackEl.textContent = "";
       feedbackEl.className = "feedback";
+
+      answerEl.value = "";
+      answerEl.focus();
+
       updateStatus();
     }
 
@@ -398,12 +495,13 @@
       }
     }
 
-    function startTimer() {
+    function startTimer60() {
       stopTimer();
       timeLeft = 60;
       updateStatus();
+
       timerId = setInterval(() => {
-        timeLeft--;
+        timeLeft -= 1;
         updateStatus();
         if (timeLeft <= 0) {
           stopTimer();
@@ -413,13 +511,15 @@
     }
 
     function startGame() {
+      selectedTypes = readSelectedTypes();
+      isTimer = timerMode.checked;
+
       score = 0;
       streak = 0;
-      isTimer = timerMode.checked;
 
       showScreen("game");
 
-      if (isTimer) startTimer();
+      if (isTimer) startTimer60();
       else stopTimer();
 
       newProblem();
@@ -429,14 +529,17 @@
       stopTimer();
       closeModal();
       showScreen("menu");
+      updateStatus();
     }
 
     function submitAnswer() {
       const raw = answerEl.value.trim();
       if (!raw) return;
 
-      const val = Number(raw);
-      if (Number.isFinite(val) && val === currentAnswer) {
+      const val = Number(raw.replace(",", "."));
+      const ok = Number.isFinite(val) && nearlyEqual(val, currentAnswer, 1e-4);
+
+      if (ok) {
         feedbackEl.textContent = "Correct!";
         feedbackEl.className = "feedback ok";
 
@@ -455,15 +558,18 @@
       } else {
         feedbackEl.textContent = "Incorrect";
         feedbackEl.className = "feedback bad";
+
         if (!isTimer) {
           streak = 0;
           updateStatus();
         }
+
         answerEl.value = "";
         answerEl.focus();
       }
     }
 
+    // Modal logic
     function openModal() {
       modal.style.display = "flex";
       postStatus.textContent = "";
@@ -521,30 +627,30 @@
         lbStatus.textContent = rows.length ? "" : "No scores yet.";
 
         rows.forEach((r, i) => {
-          const row = document.createElement("div");
-          row.className = "lbRow";
+          const el = document.createElement("div");
+          el.className = "lbRow";
 
           const left = document.createElement("div");
           left.className = "lbLeft";
 
-          const name = document.createElement("div");
-          name.className = "lbName";
-          name.textContent = `${i + 1}. ${r.name || "Anonymous"}`;
+          const nm = document.createElement("div");
+          nm.className = "lbName";
+          nm.textContent = `${i + 1}. ${r.name || "Anonymous"}`;
 
           const meta = document.createElement("div");
           meta.className = "lbMeta";
           meta.textContent = "Best score";
 
-          const scoreEl = document.createElement("div");
-          scoreEl.className = "lbScore";
-          scoreEl.textContent = String(Number(r.score) || 0);
+          const right = document.createElement("div");
+          right.className = "lbScore";
+          right.textContent = String(Number(r.score) || 0);
 
-          left.appendChild(name);
+          left.appendChild(nm);
           left.appendChild(meta);
-          row.appendChild(left);
-          row.appendChild(scoreEl);
+          el.appendChild(left);
+          el.appendChild(right);
 
-          lbList.appendChild(row);
+          lbList.appendChild(el);
         });
       } catch (e) {
         console.error(e);
@@ -552,6 +658,7 @@
       }
     }
 
+    // 1) Celebration: bounce + confetti (2 seconds) with 2x image size
     function runPersonalBestCelebration(durationMs = 2000) {
       const overlay = celebrateOverlay;
       const canvas = confettiCanvas;
@@ -563,24 +670,23 @@
         canvas.height = window.innerHeight;
       }
       resize();
-
       overlay.style.display = "block";
 
-      // Bouncing image
+      // Bounce: match CSS size (192)
       let x = 20, y = 20;
-      let vx = 10, vy = 8;
-      const imgSize = 96;
+      let vx = 11, vy = 9;
+      const imgSize = 192;
 
       // Confetti
       const colors = ["#ff6b6b", "#4f7cff", "#43d17a", "#ffd166", "#c77dff", "#ffffff"];
       const confetti = [];
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < 220; i++) {
         confetti.push({
           x: Math.random() * canvas.width,
           y: -Math.random() * canvas.height,
           vx: (Math.random() - 0.5) * 3,
           vy: 4 + Math.random() * 7,
-          size: 4 + Math.random() * 6,
+          size: 4 + Math.random() * 7,
           rot: Math.random() * Math.PI,
           vr: (Math.random() - 0.5) * 0.25,
           color: colors[Math.floor(Math.random() * colors.length)]
@@ -592,7 +698,7 @@
       function frame(now) {
         const t = now - start;
 
-        // move bounce
+        // bounce
         x += vx;
         y += vy;
         const maxX = window.innerWidth - imgSize;
@@ -605,7 +711,7 @@
 
         img.style.transform = `translate(${x}px, ${y}px)`;
 
-        // draw confetti
+        // confetti
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (const p of confetti) {
           p.x += p.vx;
@@ -642,6 +748,7 @@
 
     // Events
     startBtn.addEventListener("click", startGame);
+
     leaderBtn.addEventListener("click", async () => {
       showScreen("leaderboard");
       await loadLeaderboard();
@@ -669,7 +776,7 @@
       startGame();
     });
 
-    // init
+    // Init
     updateStatus();
   </script>
 </body>
