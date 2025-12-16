@@ -182,19 +182,92 @@ async function showLeaderboard() {
 
 function showMenu() { show("menu"); }
 
-function celebrate() {
-  const box = document.getElementById("celebrate");
+function celebrate(durationMs = 2000) {
+  const overlay = document.getElementById("celebrate");
+  const canvas = document.getElementById("confetti");
   const img = document.getElementById("bounce");
-  box.style.display = "block";
-  let x=20,y=20,vx=8,vy=6;
-  const i = setInterval(()=> {
-    x+=vx;y+=vy;
-    if (x<0||x>innerWidth-80) vx*=-1;
-    if (y<0||y>innerHeight-80) vy*=-1;
-    img.style.transform=`translate(${x}px,${y}px)`;
-  },16);
-  setTimeout(()=>{clearInterval(i);box.style.display="none";},2000);
+  const ctx = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+
+  overlay.style.display = "block";
+
+  // bouncing icon
+  let x = 20, y = 20;
+  let vx = 10, vy = 8;
+  const size = 80;
+
+  // confetti particles
+  const colors = ["#ff6b6b", "#4f7cff", "#43d17a", "#ffd166", "#c77dff", "#ffffff"];
+  const parts = [];
+  for (let i = 0; i < 200; i++) {
+    parts.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      vx: (Math.random() - 0.5) * 3,
+      vy: 4 + Math.random() * 7,
+      r: 2 + Math.random() * 5,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.25,
+      c: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+
+  const start = performance.now();
+
+  function frame(now) {
+    const t = now - start;
+
+    // bounce
+    x += vx; y += vy;
+    const maxX = window.innerWidth - size;
+    const maxY = window.innerHeight - size;
+    if (x <= 0) { x = 0; vx *= -1; }
+    if (y <= 0) { y = 0; vy *= -1; }
+    if (x >= maxX) { x = maxX; vx *= -1; }
+    if (y >= maxY) { y = maxY; vy *= -1; }
+    img.style.transform = `translate(${x}px, ${y}px)`;
+
+    // confetti
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of parts) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+
+      // wrap
+      if (p.y > canvas.height + 20) {
+        p.y = -20;
+        p.x = Math.random() * canvas.width;
+      }
+      if (p.x < -20) p.x = canvas.width + 20;
+      if (p.x > canvas.width + 20) p.x = -20;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+      ctx.restore();
+    }
+
+    if (t < durationMs) {
+      requestAnimationFrame(frame);
+    } else {
+      overlay.style.display = "none";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      window.removeEventListener("resize", resize);
+    }
+  }
+
+  window.addEventListener("resize", resize, { passive: true });
+  requestAnimationFrame(frame);
 }
+
 </script>
 </body>
 </html>
