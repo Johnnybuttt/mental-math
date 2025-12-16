@@ -23,251 +23,654 @@
       user-select: none;
     }
     .wrap { max-width: 720px; margin: auto; padding: 20px; }
-    .card { background: #121726; border-radius: 18px; padding: 18px; }
-    h1 { margin: 0 0 10px; }
+    .card { background: #121726; border: 1px solid #232b3f; border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    h1 { margin: 0 0 10px; font-size: 28px; }
+    .muted { color: #a8b3d6; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
     button {
       border: none; border-radius: 14px;
       padding: 12px; font-weight: 700;
       cursor: pointer;
+      touch-action: manipulation;
+      flex: 1;
     }
     .primary { background: #4f7cff; color: white; }
     .secondary { background: #232b3f; color: white; }
     .screen { display: none; }
     .screen.active { display: block; }
-    .problem { font-size: 40px; text-align: center; margin: 20px 0; }
-    input { width: 100%; font-size: 20px; padding: 10px; border-radius: 12px; }
-    .feedback { text-align: center; height: 24px; font-weight: 700; }
+
+    .problem { font-size: 42px; text-align: center; margin: 18px 0; font-weight: 900; }
+    input.answer {
+      width: 100%;
+      font-size: 22px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .pill {
+      display: inline-block;
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid #232b3f;
+      border-radius: 999px;
+      background: #0f1422;
+      color: #a8b3d6;
+      margin-bottom: 10px;
+    }
+    .feedback { text-align: center; height: 26px; font-weight: 800; margin-top: 10px; }
     .ok { color: #43d17a; }
     .bad { color: #ff6b6b; }
+
+    .lbRow {
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px;
+      border: 1px solid #232b3f;
+      border-radius: 14px;
+      background: #0f1422;
+      margin-bottom: 10px;
+    }
+    .lbLeft { display:flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .lbName { font-weight: 900; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 480px; }
+    .lbMeta { font-size: 12px; color: #a8b3d6; }
+    .lbScore { font-weight: 900; font-size: 18px; }
+
+    /* Celebration overlay */
+    #celebrate {
+      display: none;
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    #confetti {
+      position: absolute;
+      inset: 0;
+    }
+    #bounce {
+      position: absolute;
+      width: 96px;
+      height: 96px;
+      left: 20px;
+      top: 20px;
+    }
+
+    /* Simple modal (timer finish) */
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #modal .card { max-width: 520px; width: 100%; }
+    input.name {
+      width: 100%;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #232b3f;
+      background: #0f1422;
+      color: #e9eefc;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .big { font-size: 34px; font-weight: 1000; text-align:center; margin: 10px 0; }
   </style>
 </head>
 
 <body>
-<div class="wrap">
+  <div class="wrap">
 
-  <!-- MENU -->
-  <div id="menu" class="screen active">
+    <!-- MENU -->
+    <div id="menu" class="screen active">
+      <div class="card">
+        <h1>Mental Math</h1>
+        <div class="muted">Practice forever or run Timer mode and post your best score.</div>
+
+        <div style="margin-top:14px;">
+          <label style="display:flex; gap:10px; align-items:center;">
+            <input type="checkbox" id="timerMode" />
+            Timer mode (60 seconds)
+          </label>
+        </div>
+
+        <div class="row" style="margin-top:14px;">
+          <button class="primary" id="startBtn">Start</button>
+          <button class="secondary" id="leaderBtn">Leaderboard</button>
+        </div>
+
+        <div class="muted" style="margin-top:12px; font-size: 13px;">
+          iPhone tip: open in Safari → Share → Add to Home Screen.
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME -->
+    <div id="game" class="screen">
+      <div class="card">
+        <div class="row" style="margin-bottom:10px;">
+          <button class="secondary" id="exitBtn" style="flex:0 0 auto;">Exit</button>
+          <div class="pill" id="statusPill">Streak: 0 | Best: 0</div>
+        </div>
+
+        <div id="problem" class="problem">Loading…</div>
+
+        <input id="answer" class="answer" inputmode="numeric" placeholder="Type answer" autocomplete="off" />
+
+        <div class="row" style="margin-top:12px;">
+          <button class="primary" id="submitBtn">Submit</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="leaderboard" class="screen">
+      <div class="card">
+        <div class="row" style="margin-bottom:10px;">
+          <button class="secondary" id="backBtn" style="flex:0 0 auto;">Back</button>
+          <div class="pill">Best score per name</div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px;">
+          <button class="secondary" id="refreshBtn">Refresh</button>
+        </div>
+
+        <div id="lbStatus" class="muted" style="margin-bottom:10px; font-size: 13px;"></div>
+        <div id="lbList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TIMER END MODAL -->
+  <div id="modal">
     <div class="card">
-      <h1>Mental Math</h1>
-      <label><input type="checkbox" id="timerMode"> Timer mode (60s)</label><br><br>
-      <button class="primary" onclick="startGame()">Start</button>
-      <button class="secondary" onclick="showLeaderboard()">Leaderboard</button>
+      <div class="muted" style="text-align:center;">Time’s up</div>
+      <div class="big" id="finalScore">Score: 0</div>
+
+      <div class="muted" style="text-align:center; margin: 6px 0 10px;">
+        Enter your name to post your best score.
+      </div>
+
+      <input id="nameInput" class="name" maxlength="20" placeholder="Your name (max 20)" />
+
+      <div class="row" style="margin-top:12px;">
+        <button class="primary" id="postBtn">Post Score</button>
+        <button class="secondary" id="skipBtn">Skip</button>
+      </div>
+
+      <div id="postStatus" class="muted" style="text-align:center; margin-top:10px; min-height: 18px;"></div>
+
+      <div class="row" style="margin-top:12px;">
+        <button class="primary" id="restartBtn">Restart</button>
+        <button class="secondary" id="exitBtn2">Exit</button>
+      </div>
     </div>
   </div>
 
-  <!-- GAME -->
-  <div id="game" class="screen">
-    <div class="card">
-      <button class="secondary" onclick="exitGame()">Exit</button>
-      <div id="status"></div>
-      <div id="problem" class="problem"></div>
-      <input id="answer" inputmode="numeric" />
-      <button class="primary" onclick="submitAnswer()">Submit</button>
-      <div id="feedback" class="feedback"></div>
-    </div>
+  <!-- CELEBRATION OVERLAY -->
+  <div id="celebrate">
+    <canvas id="confetti"></canvas>
+    <img id="bounce" src="icon.png" alt="celebrate" />
   </div>
 
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="screen">
-    <div class="card">
-      <button class="secondary" onclick="showMenu()">Back</button>
-      <h1>Leaderboard</h1>
-      <div id="lb"></div>
-    </div>
-  </div>
+  <!-- FIREBASE (module) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      runTransaction,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-</div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDONN7TlyRODTneVlM3cbc3IFOxZmg5hkI",
+      authDomain: "mental-math-ea932.firebaseapp.com",
+      projectId: "mental-math-ea932",
+      storageBucket: "mental-math-ea932.firebasestorage.app",
+      messagingSenderId: "943851684376",
+      appId: "1:943851684376:web:fdfc75f05b26610fe0796d"
+    };
 
-<!-- CELEBRATION -->
-<div id="celebrate" style="display:none; position:fixed; inset:0; pointer-events:none;">
-  <canvas id="confetti"></canvas>
-  <img src="icon.png" id="bounce" style="position:absolute; width:80px;">
-</div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-<!-- FIREBASE -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, doc, runTransaction, collection, query, orderBy, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-  const app = initializeApp({
-    apiKey: "AIzaSyDONN7TlyRODTneVlM3cbc3IFOxZmg5hkI",
-    authDomain: "mental-math-ea932.firebaseapp.com",
-    projectId: "mental-math-ea932",
-    storageBucket: "mental-math-ea932.firebasestorage.app",
-    messagingSenderId: "943851684376",
-    appId: "1:943851684376:web:fdfc75f05b26610fe0796d"
-  });
-
-  const db = getFirestore(app);
-
-  window.api = {
-    async submit(name, score) {
-      const ref = doc(db, "bestScores", name.toLowerCase());
-      return await runTransaction(db, async tx => {
-        const snap = await tx.get(ref);
-        if (!snap.exists() || score > snap.data().score) {
-          tx.set(ref, { name, score, updatedAt: serverTimestamp() });
-          return true;
-        }
-        return false;
-      });
-    },
-    async leaderboard() {
-      const q = query(collection(db, "bestScores"), orderBy("score", "desc"));
-      const snap = await getDocs(q);
-      return snap.docs.map(d => d.data());
+    function toNameKey(name) {
+      return String(name || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 50) || "anonymous";
     }
-  };
-</script>
 
-<script>
-let score = 0, streak = 0, time = 60, timer;
+    window.api = {
+      // Returns: { updated: true/false, previous: number }
+      async submitBestScore(name, score) {
+        const cleanName = String(name || "").trim().slice(0, 20) || "Anonymous";
+        const nameKey = toNameKey(cleanName);
+        const cleanScore = Math.max(0, Math.floor(Number(score) || 0));
 
-function show(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
+        const ref = doc(db, "bestScores", nameKey);
 
-function startGame() {
-  score = 0; streak = 0; time = 60;
-  show("game");
-  next();
-  if (timerMode.checked) {
-    timer = setInterval(() => {
-      time--;
-      if (time <= 0) endTimer();
-    }, 1000);
-  }
-}
+        const result = await runTransaction(db, async (tx) => {
+          const snap = await tx.get(ref);
 
-function exitGame() {
-  clearInterval(timer);
-  show("menu");
-}
+          if (!snap.exists()) {
+            tx.set(ref, {
+              name: cleanName,
+              nameKey,
+              score: cleanScore,
+              updatedAt: serverTimestamp()
+            });
+            return { updated: true, previous: 0 };
+          }
 
-function next() {
-  const a = Math.floor(Math.random()*20)+1;
-  const b = Math.floor(Math.random()*20)+1;
-  window.answerVal = a + b;
-  problem.textContent = `${a} + ${b}`;
-  answer.value = "";
-  status.textContent = `Score: ${score}`;
-}
+          const current = snap.data();
+          const prev = Number(current.score) || 0;
 
-function submitAnswer() {
-  if (+answer.value === answerVal) {
-    feedback.textContent = "Correct!";
-    feedback.className = "feedback ok";
-    score++;
-    next();
-  } else {
-    feedback.textContent = "Incorrect";
-    feedback.className = "feedback bad";
-  }
-}
+          if (cleanScore > prev) {
+            tx.set(ref, {
+              name: cleanName,
+              nameKey,
+              score: cleanScore,
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+            return { updated: true, previous: prev };
+          }
 
-async function endTimer() {
-  clearInterval(timer);
-  const name = prompt("Enter name");
-  const isPB = await window.api.submit(name || "anon", score);
-  if (isPB) celebrate();
-  showLeaderboard();
-}
+          return { updated: false, previous: prev };
+        });
 
-async function showLeaderboard() {
-  show("leaderboard");
-  const rows = await window.api.leaderboard();
-  lb.innerHTML = rows.map(r => `<div>${r.name}: ${r.score}</div>`).join("");
-}
+        return result;
+      },
 
-function showMenu() { show("menu"); }
-
-function celebrate(durationMs = 2000) {
-  const overlay = document.getElementById("celebrate");
-  const canvas = document.getElementById("confetti");
-  const img = document.getElementById("bounce");
-  const ctx = canvas.getContext("2d");
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-
-  overlay.style.display = "block";
-
-  // bouncing icon
-  let x = 20, y = 20;
-  let vx = 10, vy = 8;
-  const size = 80;
-
-  // confetti particles
-  const colors = ["#ff6b6b", "#4f7cff", "#43d17a", "#ffd166", "#c77dff", "#ffffff"];
-  const parts = [];
-  for (let i = 0; i < 200; i++) {
-    parts.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * -canvas.height,
-      vx: (Math.random() - 0.5) * 3,
-      vy: 4 + Math.random() * 7,
-      r: 2 + Math.random() * 5,
-      rot: Math.random() * Math.PI,
-      vr: (Math.random() - 0.5) * 0.25,
-      c: colors[Math.floor(Math.random() * colors.length)]
-    });
-  }
-
-  const start = performance.now();
-
-  function frame(now) {
-    const t = now - start;
-
-    // bounce
-    x += vx; y += vy;
-    const maxX = window.innerWidth - size;
-    const maxY = window.innerHeight - size;
-    if (x <= 0) { x = 0; vx *= -1; }
-    if (y <= 0) { y = 0; vy *= -1; }
-    if (x >= maxX) { x = maxX; vx *= -1; }
-    if (y >= maxY) { y = maxY; vy *= -1; }
-    img.style.transform = `translate(${x}px, ${y}px)`;
-
-    // confetti
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (const p of parts) {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rot += p.vr;
-
-      // wrap
-      if (p.y > canvas.height + 20) {
-        p.y = -20;
-        p.x = Math.random() * canvas.width;
+      async topScores(max = 20) {
+        const q = query(collection(db, "bestScores"), orderBy("score", "desc"), limit(max));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => d.data());
       }
-      if (p.x < -20) p.x = canvas.width + 20;
-      if (p.x > canvas.width + 20) p.x = -20;
+    };
+  </script>
 
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.fillStyle = p.c;
-      ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
-      ctx.restore();
+  <!-- APP LOGIC -->
+  <script>
+    // Screens
+    const menu = document.getElementById("menu");
+    const game = document.getElementById("game");
+    const leaderboard = document.getElementById("leaderboard");
+
+    // Controls
+    const timerMode = document.getElementById("timerMode");
+    const startBtn = document.getElementById("startBtn");
+    const leaderBtn = document.getElementById("leaderBtn");
+    const exitBtn = document.getElementById("exitBtn");
+    const exitBtn2 = document.getElementById("exitBtn2");
+    const submitBtn = document.getElementById("submitBtn");
+    const backBtn = document.getElementById("backBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    // Game
+    const statusPill = document.getElementById("statusPill");
+    const problemEl = document.getElementById("problem");
+    const answerEl = document.getElementById("answer");
+    const feedbackEl = document.getElementById("feedback");
+
+    // Leaderboard
+    const lbStatus = document.getElementById("lbStatus");
+    const lbList = document.getElementById("lbList");
+
+    // Modal
+    const modal = document.getElementById("modal");
+    const finalScore = document.getElementById("finalScore");
+    const nameInput = document.getElementById("nameInput");
+    const postBtn = document.getElementById("postBtn");
+    const skipBtn = document.getElementById("skipBtn");
+    const postStatus = document.getElementById("postStatus");
+    const restartBtn = document.getElementById("restartBtn");
+
+    // Celebration
+    const celebrateOverlay = document.getElementById("celebrate");
+    const confettiCanvas = document.getElementById("confetti");
+    const bounceImg = document.getElementById("bounce");
+
+    // State
+    let currentAnswer = 0;
+    let streak = 0;
+    let bestStreak = Number(localStorage.getItem("bestStreak") || 0);
+
+    let isTimer = false;
+    let score = 0;
+    let timeLeft = 60;
+    let timerId = null;
+
+    function showScreen(id) {
+      [menu, game, leaderboard].forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
     }
 
-    if (t < durationMs) {
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function updateStatus() {
+      if (!isTimer) {
+        statusPill.textContent = `Streak: ${streak} | Best: ${bestStreak}`;
+      } else {
+        statusPill.textContent = `Time: ${timeLeft}s | Score: ${score}`;
+      }
+    }
+
+    function newProblem() {
+      const a = randInt(1, 20);
+      const b = randInt(1, 20);
+      currentAnswer = a + b;
+      problemEl.textContent = `${a} + ${b}`;
+      answerEl.value = "";
+      answerEl.focus();
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+      updateStatus();
+    }
+
+    function stopTimer() {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      timeLeft = 60;
+      updateStatus();
+      timerId = setInterval(() => {
+        timeLeft--;
+        updateStatus();
+        if (timeLeft <= 0) {
+          stopTimer();
+          endTimer();
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      score = 0;
+      streak = 0;
+      isTimer = timerMode.checked;
+
+      showScreen("game");
+
+      if (isTimer) startTimer();
+      else stopTimer();
+
+      newProblem();
+    }
+
+    function exitGame() {
+      stopTimer();
+      closeModal();
+      showScreen("menu");
+    }
+
+    function submitAnswer() {
+      const raw = answerEl.value.trim();
+      if (!raw) return;
+
+      const val = Number(raw);
+      if (Number.isFinite(val) && val === currentAnswer) {
+        feedbackEl.textContent = "Correct!";
+        feedbackEl.className = "feedback ok";
+
+        if (isTimer) {
+          score++;
+        } else {
+          streak++;
+          if (streak > bestStreak) {
+            bestStreak = streak;
+            localStorage.setItem("bestStreak", String(bestStreak));
+          }
+        }
+
+        updateStatus();
+        setTimeout(newProblem, 120);
+      } else {
+        feedbackEl.textContent = "Incorrect";
+        feedbackEl.className = "feedback bad";
+        if (!isTimer) {
+          streak = 0;
+          updateStatus();
+        }
+        answerEl.value = "";
+        answerEl.focus();
+      }
+    }
+
+    function openModal() {
+      modal.style.display = "flex";
+      postStatus.textContent = "";
+      finalScore.textContent = `Score: ${score}`;
+      nameInput.value = localStorage.getItem("lastName") || "";
+      nameInput.focus();
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+      postStatus.textContent = "";
+    }
+
+    function endTimer() {
+      openModal();
+    }
+
+    async function postScore() {
+      postBtn.disabled = true;
+      postStatus.textContent = "Posting…";
+
+      try {
+        const name = (nameInput.value || "").trim().slice(0, 20) || "Anonymous";
+        localStorage.setItem("lastName", name);
+
+        const res = await window.api.submitBestScore(name, score);
+
+        if (res && res.updated && score > (res.previous || 0)) {
+          runPersonalBestCelebration(2000);
+          postStatus.textContent = "New personal best!";
+        } else {
+          postStatus.textContent = "Posted (or not higher than your best).";
+        }
+
+        setTimeout(async () => {
+          closeModal();
+          showScreen("leaderboard");
+          await loadLeaderboard();
+          postBtn.disabled = false;
+          postStatus.textContent = "";
+        }, 500);
+      } catch (e) {
+        console.error(e);
+        postStatus.textContent = "Post failed. Check Firestore rules.";
+        postBtn.disabled = false;
+      }
+    }
+
+    async function loadLeaderboard() {
+      lbStatus.textContent = "Loading…";
+      lbList.innerHTML = "";
+
+      try {
+        const rows = await window.api.topScores(20);
+        lbStatus.textContent = rows.length ? "" : "No scores yet.";
+
+        rows.forEach((r, i) => {
+          const row = document.createElement("div");
+          row.className = "lbRow";
+
+          const left = document.createElement("div");
+          left.className = "lbLeft";
+
+          const name = document.createElement("div");
+          name.className = "lbName";
+          name.textContent = `${i + 1}. ${r.name || "Anonymous"}`;
+
+          const meta = document.createElement("div");
+          meta.className = "lbMeta";
+          meta.textContent = "Best score";
+
+          const scoreEl = document.createElement("div");
+          scoreEl.className = "lbScore";
+          scoreEl.textContent = String(Number(r.score) || 0);
+
+          left.appendChild(name);
+          left.appendChild(meta);
+          row.appendChild(left);
+          row.appendChild(scoreEl);
+
+          lbList.appendChild(row);
+        });
+      } catch (e) {
+        console.error(e);
+        lbStatus.textContent = "Could not load leaderboard.";
+      }
+    }
+
+    function runPersonalBestCelebration(durationMs = 2000) {
+      const overlay = celebrateOverlay;
+      const canvas = confettiCanvas;
+      const img = bounceImg;
+      const ctx = canvas.getContext("2d");
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+
+      overlay.style.display = "block";
+
+      // Bouncing image
+      let x = 20, y = 20;
+      let vx = 10, vy = 8;
+      const imgSize = 96;
+
+      // Confetti
+      const colors = ["#ff6b6b", "#4f7cff", "#43d17a", "#ffd166", "#c77dff", "#ffffff"];
+      const confetti = [];
+      for (let i = 0; i < 200; i++) {
+        confetti.push({
+          x: Math.random() * canvas.width,
+          y: -Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 3,
+          vy: 4 + Math.random() * 7,
+          size: 4 + Math.random() * 6,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.25,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
+      }
+
+      const start = performance.now();
+
+      function frame(now) {
+        const t = now - start;
+
+        // move bounce
+        x += vx;
+        y += vy;
+        const maxX = window.innerWidth - imgSize;
+        const maxY = window.innerHeight - imgSize;
+
+        if (x <= 0) { x = 0; vx *= -1; }
+        if (y <= 0) { y = 0; vy *= -1; }
+        if (x >= maxX) { x = maxX; vx *= -1; }
+        if (y >= maxY) { y = maxY; vy *= -1; }
+
+        img.style.transform = `translate(${x}px, ${y}px)`;
+
+        // draw confetti
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of confetti) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+
+          if (p.y > canvas.height + 20) {
+            p.y = -20;
+            p.x = Math.random() * canvas.width;
+          }
+          if (p.x < -20) p.x = canvas.width + 20;
+          if (p.x > canvas.width + 20) p.x = -20;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        }
+
+        if (t < durationMs) {
+          requestAnimationFrame(frame);
+        } else {
+          overlay.style.display = "none";
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          window.removeEventListener("resize", resize);
+        }
+      }
+
+      window.addEventListener("resize", resize, { passive: true });
       requestAnimationFrame(frame);
-    } else {
-      overlay.style.display = "none";
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      window.removeEventListener("resize", resize);
     }
-  }
 
-  window.addEventListener("resize", resize, { passive: true });
-  requestAnimationFrame(frame);
-}
+    // Events
+    startBtn.addEventListener("click", startGame);
+    leaderBtn.addEventListener("click", async () => {
+      showScreen("leaderboard");
+      await loadLeaderboard();
+    });
 
-</script>
+    exitBtn.addEventListener("click", exitGame);
+    exitBtn2.addEventListener("click", exitGame);
+
+    submitBtn.addEventListener("click", submitAnswer);
+    answerEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitAnswer();
+    });
+
+    backBtn.addEventListener("click", () => showScreen("menu"));
+    refreshBtn.addEventListener("click", loadLeaderboard);
+
+    postBtn.addEventListener("click", postScore);
+    nameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") postScore();
+    });
+
+    skipBtn.addEventListener("click", () => closeModal());
+    restartBtn.addEventListener("click", () => {
+      closeModal();
+      startGame();
+    });
+
+    // init
+    updateStatus();
+  </script>
 </body>
 </html>
